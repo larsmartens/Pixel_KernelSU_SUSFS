@@ -41,9 +41,9 @@ on:
           - None
         default: KSUN+SUSFS
       ksu_commit:
-        description: "KSU Commit (optional)"
+        description: "KernelSU-Next commit"
         type: string
-        default: ""
+        default: "5a4a71874caaad06aa126f761c93391de1d32361"
         required: false
 
 jobs:

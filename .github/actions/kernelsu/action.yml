@@ -1,5 +1,5 @@
-name: Setup Wild KSU
-description: Download and configure Wild KSU with version tracking
+name: Setup KernelSU-Next
+description: Download and configure KernelSU-Next with version tracking
 inputs:
   ksu_commit:
     description: "KSU Commit"
@@ -9,14 +9,27 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Download Wild KSU
+    - name: Download KernelSU-Next
       shell: bash
       working-directory: ${{ github.workspace }}/kernel/aosp
       run: |
         # Clone the repository
         curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/dev/kernel/setup.sh" | bash -s dev
         
-        cd KernelSU-Next/kernel
+        cd KernelSU-Next
+        if [ -n "${{ inputs.ksu_commit }}" ]; then
+          KSU_COMMIT="${{ inputs.ksu_commit }}"
+          if [ "${#KSU_COMMIT}" -lt 40 ]; then
+            RESOLVED_COMMIT=$(curl -fsSL "https://api.github.com/repos/KernelSU-Next/KernelSU-Next/commits/${KSU_COMMIT}" | sed -n 's/.*"sha": "\([0-9a-f]\{40\}\)".*/\1/p' | head -n 1)
+            if [ -n "$RESOLVED_COMMIT" ]; then
+              KSU_COMMIT="$RESOLVED_COMMIT"
+            fi
+          fi
+          git fetch --depth=1 origin "$KSU_COMMIT"
+          git checkout FETCH_HEAD
+        fi
+
+        cd kernel
         
         COMMITS_COUNT=$(/usr/bin/git rev-list --count HEAD)
         BASE_VERSION=30000
