@@ -25,7 +25,7 @@ runs:
               KSU_COMMIT="$RESOLVED_COMMIT"
             fi
           fi
-          git fetch --depth=1 origin "$KSU_COMMIT"
+          git fetch --tags origin "$KSU_COMMIT"
           git checkout FETCH_HEAD
         fi
 
@@ -56,7 +56,7 @@ runs:
       run: |
         # Extract and export KSU version info
         KSU_GIT_VERSION=$(git rev-list --count HEAD 2>/dev/null)
-        KSU_GIT_TAG=$(git describe --tags --abbrev=0 2>/dev/null)
+        KSU_GIT_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.1")
         KSU_COMMIT=$(git rev-parse --short HEAD 2>/dev/null)
         KSU_VERSION=$((30000 + KSU_GIT_VERSION))
         
