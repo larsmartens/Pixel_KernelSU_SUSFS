@@ -197,6 +197,7 @@ jobs:
     - name: Setup BBRv3
       uses: ./.github/actions/bbr
       with:
+        android_version: ${{ env.ANDROID_VERSION }}
         kernel_version: ${{ env.KERNEL_VERSION }}
 
     - name: Apply Kernel Branding
