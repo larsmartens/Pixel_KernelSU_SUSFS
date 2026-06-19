@@ -15,8 +15,15 @@ runs:
       shell: bash
       working-directory: ${{ github.workspace }}/kernel/aosp
       run: |
-        cp "$GITHUB_WORKSPACE/kernel_patches/bbrv3-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch" "$GITHUB_WORKSPACE/kernel/aosp"
-        patch -p1 < "bbrv3-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch"
+        BBR_PATCH="$GITHUB_WORKSPACE/kernel_patches/bbrv3-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch"
+        if [ ! -f "$BBR_PATCH" ]; then
+          echo "BBR_PATCH_APPLIED=false" >> "$GITHUB_ENV"
+          echo "No BBRv3 patch for ${{ inputs.android_version }}-${{ inputs.kernel_version }}; skipping."
+          exit 0
+        fi
+        cp "$BBR_PATCH" "$GITHUB_WORKSPACE/kernel/aosp"
+        patch -p1 < "$(basename "$BBR_PATCH")"
+        echo "BBR_PATCH_APPLIED=true" >> "$GITHUB_ENV"
 
     - name: Fix modules.bzl
       shell: bash
@@ -35,6 +42,10 @@ runs:
       shell: bash
       working-directory: ${{ github.workspace }}/kernel
       run: |
+        if [ "${BBR_PATCH_APPLIED:-false}" != "true" ]; then
+          echo "Skipping BBRv3 config because no patch was applied."
+          exit 0
+        fi
         cat >> "${{ github.workspace }}/wild_gki.fragment" << 'EOF'
         CONFIG_TCP_CONG_ADVANCED=y
         CONFIG_TCP_CONG_BBR=y
