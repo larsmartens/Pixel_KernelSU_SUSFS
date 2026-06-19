@@ -83,6 +83,7 @@ runs:
         if [ "${{ inputs.android_version }}" = "android14" ] && [ "${{ inputs.kernel_version }}" = "6.1" ]; then
           cp "${{ github.workspace }}/kernel_patches/wild/archived/susfs_fix_patches/v2.1.0/a14-6.1/base.c.patch" ./
           patch -p1 < base.c.patch
+          rm -f fs/proc/base.c.rej
         fi
 
     - name: Apply KSU SUSFS Patches
