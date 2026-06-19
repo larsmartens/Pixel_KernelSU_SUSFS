@@ -357,6 +357,17 @@ jobs:
         echo "Using kernel image: $IMAGE_LZ4"
         cp "$IMAGE_LZ4" "$GITHUB_WORKSPACE/AnyKernel3/Image.lz4"
 
+    - name: Package AnyKernel3 Flashable Zip
+      working-directory: ${{ github.workspace }}/AnyKernel3
+      run: |
+        set -e
+        ZIP_PATH="$GITHUB_WORKSPACE/${FILE_NAME}-AnyKernel3.zip"
+        rm -f "$ZIP_PATH" "$ZIP_PATH.sha256"
+        zip -r -q -9 "$ZIP_PATH" . \
+          -x '.git/*' \
+          -x '.github/*'
+        sha256sum "$ZIP_PATH" | tee "$ZIP_PATH.sha256"
+
     - name: Scan and collect patch rejects
       id: scan
       if: ${{ always() }}
@@ -392,9 +403,11 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.FILE_NAME }}-AnyKernel3
-        path: ${{ github.workspace }}/AnyKernel3/**
-        if-no-files-found: ignore
+        name: ${{ env.FILE_NAME }}-AnyKernel3-Flashable
+        path: |
+          ${{ github.workspace }}/${{ env.FILE_NAME }}-AnyKernel3.zip
+          ${{ github.workspace }}/${{ env.FILE_NAME }}-AnyKernel3.zip.sha256
+        if-no-files-found: error
         compression-level: 9
 
     - name: Upload Rejects
