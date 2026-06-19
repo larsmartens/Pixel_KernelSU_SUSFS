@@ -366,7 +366,10 @@ jobs:
         zip -r -q -9 "$ZIP_PATH" . \
           -x '.git/*' \
           -x '.github/*'
-        sha256sum "$ZIP_PATH" | tee "$ZIP_PATH.sha256"
+        (
+          cd "$GITHUB_WORKSPACE"
+          sha256sum "$(basename "$ZIP_PATH")" | tee "$ZIP_PATH.sha256"
+        )
 
     - name: Scan and collect patch rejects
       id: scan
