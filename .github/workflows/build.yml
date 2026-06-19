@@ -329,8 +329,33 @@ jobs:
 
     - name: Prepare AnyKernel3 Zip
       run: |
-        # Copy Image from normal build locations
-        cp "$GITHUB_WORKSPACE/kernel/out/$CODENAM/dist/Image.lz4" "$GITHUB_WORKSPACE/AnyKernel3/Image.lz4"
+        set -e
+        CODENAME=$(echo "${{ inputs.repo }}" | sed -E 's/^android-gs-([^-]+).*/\1/')
+        DIST_CANDIDATES=(
+          "$GITHUB_WORKSPACE/kernel/out/$ANDROID_VERSION-$KERNEL_VERSION/dist"
+          "$GITHUB_WORKSPACE/kernel/bazel-bin/private/devices/google/$CODENAME/dist"
+        )
+
+        IMAGE_LZ4=""
+        for DIST_DIR in "${DIST_CANDIDATES[@]}"; do
+          if [ -f "$DIST_DIR/Image.lz4" ]; then
+            IMAGE_LZ4="$DIST_DIR/Image.lz4"
+            break
+          fi
+        done
+
+        if [ -z "$IMAGE_LZ4" ]; then
+          IMAGE_LZ4=$(find "$GITHUB_WORKSPACE/kernel/out" "$GITHUB_WORKSPACE/kernel/bazel-bin" -path '*/dist/Image.lz4' -print -quit 2>/dev/null || true)
+        fi
+
+        if [ -z "$IMAGE_LZ4" ] || [ ! -f "$IMAGE_LZ4" ]; then
+          echo "Could not find Image.lz4 for AnyKernel3 packaging"
+          find "$GITHUB_WORKSPACE/kernel/out" "$GITHUB_WORKSPACE/kernel/bazel-bin" -maxdepth 8 -path '*/dist/*' -type f 2>/dev/null | sort | head -200
+          exit 1
+        fi
+
+        echo "Using kernel image: $IMAGE_LZ4"
+        cp "$IMAGE_LZ4" "$GITHUB_WORKSPACE/AnyKernel3/Image.lz4"
 
     - name: Scan and collect patch rejects
       id: scan
