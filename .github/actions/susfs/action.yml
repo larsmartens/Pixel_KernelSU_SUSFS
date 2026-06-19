@@ -80,10 +80,14 @@ runs:
         cp "${{ github.workspace }}/susfs4ksu/kernel_patches/include/linux/"* "${{ github.workspace }}/kernel/aosp/include/linux/"
         cp ${{ github.workspace }}/susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch ./
         patch -p1 < 50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch || true
+        if [ "${{ inputs.android_version }}" = "android14" ] && [ "${{ inputs.kernel_version }}" = "6.1" ]; then
+          cp "${{ github.workspace }}/kernel_patches/wild/archived/susfs_fix_patches/v2.1.0/a14-6.1/base.c.patch" ./
+          patch -p1 < base.c.patch
+        fi
 
     - name: Apply KSU SUSFS Patches
       shell: bash
       working-directory: ${{ github.workspace }}/kernel/aosp/KernelSU-Next
       run: |
-        cp ${{ github.workspace }}/kernel_patches/wild/ksun-0daf55582-susfs-v2.1.0-e259e7d6.patch ./
-        patch -p1 < ksun-0daf55582-susfs-v2.1.0-e259e7d6.patch
+        cp ${{ github.workspace }}/kernel_patches/wild/ksun-5a4a718-susfs-f7ae19ef-gki-android14-6.1.patch ./
+        patch -p1 < ksun-5a4a718-susfs-f7ae19ef-gki-android14-6.1.patch
