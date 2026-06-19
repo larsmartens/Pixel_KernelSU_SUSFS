@@ -214,7 +214,7 @@ jobs:
           # Remove ABI protected exports to prevent build errors
           rm -rf aosp/android/abi_gki_protected_exports_*
           perl -pi -e 's/^\s*"protected_exports_list"\s*:\s*"android\/abi_gki_protected_exports_aarch64",\s*$//;' aosp/BUILD.bazel
-          sed -i 's/protected_modules = \[.*\]/protected_modules = []/' aospodules.bzl || true
+          sed -i 's/protected_modules = \[.*\]/protected_modules = []/' aosp/modules.bzl || true
         fi
 
     - name: Clean Kernel Flags
@@ -229,7 +229,17 @@ jobs:
         set -ex
         # Copy fragment to kernel tree for bazel
         cp "$GITHUB_WORKSPACE/wild_gki.fragment" aosp/arch/arm64/configs/wild_gki.fragment
-        build_${{ matrix.codename }}.sh --config=release --stamp --defconfig_fragment=//aosp:arch/arm64/configs/wild_gki.fragment || exit 1
+        CODENAME=$(echo "${{ inputs.repo }}" | sed -E 's/^android-gs-([^-]+).*/\1/')
+        BUILD_SCRIPT="./build_${CODENAME}.sh"
+        if [ ! -x "$BUILD_SCRIPT" ]; then
+          BUILD_SCRIPT=$(find . -maxdepth 1 -type f -name 'build_*.sh' | sort | head -n 1)
+        fi
+        if [ -z "$BUILD_SCRIPT" ] || [ ! -x "$BUILD_SCRIPT" ]; then
+          echo "No executable build_*.sh script found"
+          find . -maxdepth 1 -type f -name 'build_*.sh' -print
+          exit 1
+        fi
+        "$BUILD_SCRIPT" --config=release --stamp --defconfig_fragment=//aosp:arch/arm64/configs/wild_gki.fragment || exit 1
 
     - name: Create Bootimgs Folder and Build Boot Images
       if: false
